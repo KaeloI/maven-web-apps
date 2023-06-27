@@ -1,0 +1,56 @@
+pipeline{
+  agent any  
+  tools {
+    maven "maven3.9.2"
+  }
+  //options {}  
+  //triggers {}
+  stages{
+    stage('1clone'){
+      steps{
+        sh "echo ready to automate build"
+        git credentialsId: 'gitHubCredentials', url: 'https://github.com/KaeloI/maven-web-apps'
+        sh "echo latest application version collected from SCM"
+      }   
+    }
+   stage('2build'){
+      steps{
+        sh "echo build process starts "
+        sh "mvn clean package"
+        sh "echo build process ends"
+      }
+    }
+ 
+  /*  stage('3review'){
+      steps{
+        sh "echo CodeQuality review  starts "
+        sh "mvn sonar:sonar"
+        sh "echo CodeQuality review ends"
+      }
+    }      
+    stage('4UploadArtifacts'){
+      steps{
+        sh "mvn deploy"
+        sh "echo build and release job completed successfully"
+      }     
+    }*/
+    stage('5deployment'){
+      steps{
+          deploy adapters: [tomcat9(credentialsId: 'tomcat-credentials', path: '', url: 'http://44.211.135.226:8177/')], contextPath: null, war: 'target/*war'
+        sh "echo deployment to production completed successfully"
+      }       
+    }
+  }
+  post{
+    failure{
+   emailext body: 'team, great work. please review. thanks', subject: 'build status', to: 'developers'
+    }
+    success{
+        emailext body: 'team, great work. please review. thanks', subject: 'build status', to: 'developers'
+    }
+    always{
+        emailext body: 'team, great work. please review. thanks', subject: 'build status', to: 'developers'
+    }
+  } 
+  
+}
